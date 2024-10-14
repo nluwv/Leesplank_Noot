@@ -9,6 +9,7 @@ from datasets import load_dataset, Dataset, DatasetDict
 import sentencepiece
 import accelerate
 from huggingface_hub import login
+import evaluate
 
 # Load environment variables (API keys) from .env file
 load_dotenv()
@@ -47,6 +48,26 @@ valid_dataset = splits["test"]
 
 data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
 
+
+# Load BLEU and ROUGE metrics
+bleu_metric = evaluate.load("bleu")
+rouge_metric = evaluate.load("rouge")
+
+# Define a function to compute metrics
+def compute_metrics(eval_pred):
+    predictions, labels = eval_pred
+    decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    # Compute BLEU and ROUGE
+    bleu = bleu_metric.compute(predictions=decoded_preds, references=decoded_labels)
+    rouge = rouge_metric.compute(predictions=decoded_preds, references=decoded_labels)
+    
+    return {
+        "bleu": bleu['bleu'],
+        "rouge": rouge['rougeL'].mid.fmeasure
+    }
+
 # Set training arguments
 training_args = Seq2SeqTrainingArguments(
     output_dir="./results",
@@ -69,7 +90,8 @@ trainer = Seq2SeqTrainer(
     train_dataset=train_dataset,
     eval_dataset=valid_dataset,
     tokenizer=tokenizer,
-    data_collator=data_collator
+    data_collator=data_collator,
+    compute_metrics=compute_metrics
 )
 
 # Train the model
