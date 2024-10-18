@@ -1,6 +1,6 @@
 python-dotenv
 polars==0.16.3
-torch==2.0.0+rocm6.2
+torch==2.0.0+rocm6.1
 transformers==4.31.0
 datasets
 sentencepiece==0.1.99
@@ -11,3 +11,4 @@ pandas
 nltk
 absl-py
 rouge_score
+tqdms

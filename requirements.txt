@@ -1,8 +1,0 @@
-polars==0.16.3
-torch==2.0.1
-transformers==4.31.0
-datasets==2.13.1
-sentencepiece==0.1.99
-accelerate==0.21.0
-huggingface_hub==0.17.3
-evaluate==0.4.0
