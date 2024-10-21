@@ -21,10 +21,14 @@ from huggingface_hub import login
 import evaluate
 from transformers import get_scheduler
 from tqdm import tqdm
+import logging
 
+#set 
+logging.basicConfig(filename='training.log', level=logging.INFO)
 
 # Load environment variables (API keys) from .env file
 load_dotenv()
+
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 
 # Initialize the distributed process group
@@ -99,6 +103,10 @@ def compute_metrics(eval_pred):
 training_args = Seq2SeqTrainingArguments(
     remove_unused_columns=False,
     output_dir="./results",
+    save_strategy="steps",  
+    save_steps=1000,  
+    logging_dir="./logs",  
+    logging_steps=100,
     eval_strategy="epoch",
     learning_rate=5e-5,
     per_device_train_batch_size=8,
@@ -107,8 +115,7 @@ training_args = Seq2SeqTrainingArguments(
     save_total_limit=3,
     num_train_epochs=3,
     predict_with_generate=True,
-    fp16=torch.cuda.is_available(),  # Enable mixed precision training on ROCm-enabled AMD GPUs
-    save_strategy="epoch"  # Distributed training specific argument
+    fp16=torch.cuda.is_available()  # Enable mixed precision training on ROCm-enabled AMD GPUs
 )
 
 print('Training arguments set')
@@ -137,6 +144,7 @@ trainer = Seq2SeqTrainer(
     optimizers=(optimizer, None)
 )
 print('Trainer initialized')
+logging.info('Trainer initialized')
 
 # Train the model
 #trainer.train()
@@ -145,21 +153,16 @@ print('Trainer initialized')
 print('Start training')
 for epoch in range(training_args.num_train_epochs):
     progress_bar = tqdm(train_loader, desc=f"Epoch {epoch}")
+    
     for step, batch in enumerate(train_loader):
         inputs = batch["input_ids"].to(device)
         labels = batch["labels"].to(device)
 
-        # Print the input and label information
-        print(f"Epoch: {epoch}, Step: {step}")
-        #print("Batch input IDs:", inputs)
-        #print("Batch labels:", labels)
-
         # Forward pass
         outputs = model(input_ids=inputs, labels=labels)
         loss = outputs.loss
-        print("Loss:", loss.item())
 
-        # Log progress in tqdm
+        # Log loss to progress bar
         progress_bar.set_postfix(loss=loss.item())
 
         # Backward pass
@@ -167,22 +170,37 @@ for epoch in range(training_args.num_train_epochs):
         loss.backward()
         optimizer.step()
 
+    
+        # Save model every 1000 steps
+        if step % 1000 == 0 and step > 0:  # Ensure we don't save at step 0
+            print(f"Saving model at step {step}...")
+            trainer.save_model('./results')
+            logging.info(f"Model saved at step {step}")
 
+        # Update learning rate (if using a scheduler)
         if trainer.lr_scheduler is not None:
             last_lr = trainer.lr_scheduler.get_last_lr()[0]
         else:
             last_lr = training_args.learning_rate
 
-        # log loss and learning rate
-        print({
-            'loss': loss.item(),
-            'learning_rate': last_lr,
-            'epoch': epoch + step / len(train_loader),
-        })
+        # Log
+        if step % 100 == 0:
+            logging.info(f"Epoch {epoch}, Step {step}, Loss: {loss.item()}")
+            logging.info(f"Learning rate: {last_lr}")
+
+    # Update progress bar
+    progress_bar.update(1)
 
 print('Training has finished')
+logging.info('Training has finished')
+
+
+
+print('Training has finished')
+logging.info('Training has finished')
 
 # Save model
+logging.info('Start saving model')
 print('Start saving model')
 # local:
 model.save_pretrained("./saved_model")
@@ -190,4 +208,5 @@ model.save_pretrained("./saved_model")
 login(HUGGINGFACE_TOKEN)
 trainer.push_to_hub("UWV/ul2-small-dutch-simplification-okt-2024")
 print('Model saved')
+logging.info('Model saved')
 
