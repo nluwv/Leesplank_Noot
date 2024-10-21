@@ -1,3 +1,6 @@
+# Script for training a Seq2Seq model for Dutch text simplification
+# Created by Eline de Kinkelder
+
 import os
 from dotenv import load_dotenv
 import glob
@@ -125,9 +128,9 @@ optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
 print('Optimizer initialized')
 
 lr_scheduler = get_scheduler(
-    name="linear",  # Type of scheduler: linear, cosine, etc.
+    name="linear",  
     optimizer=optimizer,
-    num_warmup_steps=0,  # You can set this based on your needs
+    num_warmup_steps=0,  
     num_training_steps=len(train_loader) * training_args.num_train_epochs
 )
 
@@ -146,8 +149,6 @@ trainer = Seq2SeqTrainer(
 print('Trainer initialized')
 logging.info('Trainer initialized')
 
-# Train the model
-#trainer.train()
 
 # Train the model
 print('Start training')
