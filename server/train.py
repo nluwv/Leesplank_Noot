@@ -25,6 +25,7 @@ import evaluate
 from transformers import get_scheduler
 from tqdm import tqdm
 import logging
+import json
 
 #set 
 logging.basicConfig(filename='training.log', level=logging.INFO)
@@ -66,7 +67,7 @@ tokenized_datasets = ds.map(tokenize_function, batched=True, remove_columns=['pr
 print('Data is tokenized')
 
 # Split the tokenized dataset (e.g., 80% train, 20% validation)
-splits = tokenized_datasets.train_test_split(test_size=0.2)
+splits = tokenized_datasets.train_test_split(test_size=0.2, seed=42)
 train_dataset = splits["train"]
 valid_dataset = splits["test"]
 print('Train-validation split is done')
@@ -99,7 +100,7 @@ def compute_metrics(eval_pred):
     
     return {
         "bleu": bleu['bleu'],
-        "rouge": rouge['rougeL'].mid.fmeasure
+        "rouge": rouge['rouge1']
     }
 
 # Set training arguments
@@ -146,6 +147,7 @@ trainer = Seq2SeqTrainer(
     compute_metrics=compute_metrics,
     optimizers=(optimizer, None)
 )
+
 print('Trainer initialized')
 logging.info('Trainer initialized')
 
@@ -188,6 +190,7 @@ for epoch in range(training_args.num_train_epochs):
         if step % 100 == 0:
             logging.info(f"Epoch {epoch}, Step {step}, Loss: {loss.item()}")
             logging.info(f"Learning rate: {last_lr}")
+            ## TODO: Add other metrics
 
     # Update progress bar
     progress_bar.update(1)
@@ -204,10 +207,64 @@ logging.info('Training has finished')
 logging.info('Start saving model')
 print('Start saving model')
 # local:
-model.save_pretrained("./saved_model")
+trainer.save_pretrained("./saved_model")
 
 login(HUGGINGFACE_TOKEN)
 trainer.push_to_hub("UWV/ul2-small-dutch-simplification-okt-2024")
 print('Model saved')
 logging.info('Model saved')
 
+
+# Evaluation loop to gather predictions and labels
+logging.info('Start model evaluation')
+def evaluate_model(model, valid_loader):
+    model.eval()
+    predictions = []
+    references = []
+    
+    for batch in valid_loader:
+        input_ids = batch["input_ids"].to(device)
+        labels = batch["labels"].to(device)
+
+        # Generate predictions
+        with torch.no_grad():
+            outputs = model.generate(input_ids)
+        
+        # Collect predictions and labels
+        predictions.extend(outputs.cpu().numpy())
+        references.extend(labels.cpu().numpy())
+    
+    # Compute metrics
+    metrics = compute_metrics(predictions, references)
+    return metrics
+
+# Run the evaluation and get the metrics
+metrics = evaluate_model(model, valid_loader)
+
+# Print the metrics
+print("Evaluation Metrics:")
+print(f"BLEU: {metrics['bleu']}")
+print(f"ROUGE-L: {metrics['rouge']}")
+logging.info("Evaluation Metrics:")
+logging.info(f"BLEU: {metrics['bleu']}")
+logging.info(f"ROUGE-L: {metrics['rouge']}")
+
+# Save metrics to a JSON file in the results folder
+results_dir = os.path.join('./results', "metrics")
+os.makedirs(results_dir, exist_ok=True)  # Create the directory if it doesn't exist
+
+metrics_file = os.path.join(results_dir, "metrics.json")
+with open(metrics_file, "w") as f:
+    json.dump(metrics, f, indent=4)
+
+
+# Define the directory paths where you want to save the datasets
+train_save_path = "/mnt/data/train_dataset"
+valid_save_path = "/mnt/data/valid_dataset"
+
+# Save the train and validation datasets to disk
+train_dataset.save_to_disk(train_save_path)
+valid_dataset.save_to_disk(valid_save_path)
+
+print(f"Train dataset saved to {train_save_path}")
+print(f"Validation dataset saved to {valid_save_path}")
