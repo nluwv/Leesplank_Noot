@@ -1,6 +1,5 @@
 import os
 import torch
-import datetime
 from peft import LoraConfig
 import torch.distributed as dist
 from dotenv import load_dotenv
@@ -8,7 +7,7 @@ from huggingface_hub import login
 from datasets import load_dataset
 from datasets import DatasetDict
 from trl import SFTTrainer, SFTConfig, DataCollatorForCompletionOnlyLM
-from transformers import AutoTokenizer, TrainingArguments, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
@@ -43,8 +42,8 @@ def setup_distributed():
 def prepare_data():
     ds = load_dataset("UWV/Leesplank_NL_wikipedia_simplifications_preprocessed")
     dataset_dict = {
-            "train": ds["train"],
-            "val": ds["val"]
+        "train": ds["train"],
+        "val": ds["val"]
     }
     return DatasetDict(dataset_dict)
 
@@ -55,18 +54,19 @@ def main():
     # Check if GPU assignment is correct
     print(f"Process {dist.get_rank()} is using GPU {torch.cuda.current_device()}")
 
-    # Load the data
-    ds = prepare_data()
-
     # Get tokenizer
     model_id = "ibm-granite/granite-3.1-2b-instruct"
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    processing_class = AutoTokenizer.from_pretrained(model_id)
+    processing_class.padding_side = 'right'
 
-    if tokenizer.pad_token_id is None:
-        tokenizer.pad_token_id = tokenizer.eos_token_id
+    if processing_class.pad_token_id is None:
+        processing_class.pad_token_id = processing_class.eos_token_id
 
-    if tokenizer.model_max_length > 100_000:
-        tokenizer.model_max_length = 2048
+    if processing_class.model_max_length > 100_000:
+        processing_class.model_max_length = 2048
+        
+    # Load the data
+    ds = prepare_data(processing_class)
 
     def formatting_prompts_func(example):
         output_texts = []
@@ -76,26 +76,24 @@ def main():
         return output_texts
     response_template = "\n<|assistant|>\n"
 
-    response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)[2:]
-    collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
+    response_template_ids = processing_class.encode(response_template, add_special_tokens=False)[2:]
+    collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=processing_class)
 
     quantization_config = BitsAndBytesConfig(
         load_in_4bit = True,
         bnb_4bit_quant_type = "nf4",
-        bnb_4bit_compute_dtype = torch.float16,
+        bnb_4bit_compute_dtype = torch.bfloat16,
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
+        # attn_implementation="flash_attention_2",
         attn_implementation="eager",
         torch_dtype="auto",
         use_cache=False,
         device_map={"": torch.cuda.current_device()},
         quantization_config=quantization_config,
     )
-
-    # Prevent the grad norm from getting too large (nan)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
 
     # Apply qLoRA
     peft_config = LoraConfig(
@@ -109,19 +107,21 @@ def main():
     output_dir = "qlora_output/ibm3-1-2b-base-sft-lora"
     training_args = SFTConfig(
         output_dir=output_dir,
-        learning_rate=5e-5,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=16,
+        learning_rate=5e-6,
+        per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
         num_train_epochs=1,
         max_steps=-1,
         do_eval=True,
         logging_strategy="steps",
         lr_scheduler_type="cosine",
-        logging_steps=100,
-        fp16=True,
+        logging_steps=50,
+        bf16=True,  # try this instead of fp16
+        optim="adafactor",
         gradient_checkpointing=True,
+        max_grad_norm=5,  # Prevent grad norm from getting too large
         report_to="none",
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=2,
         ddp_find_unused_parameters=False,
         ddp_backend='nccl'
     )
@@ -131,7 +131,7 @@ def main():
         args=training_args,
         train_dataset=ds['train'],
         eval_dataset=ds['val'],
-        processing_class=tokenizer,
+        processing_class=processing_class,
         peft_config = peft_config,
         formatting_func=formatting_prompts_func,
         data_collator=collator,
