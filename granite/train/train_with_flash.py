@@ -1,5 +1,6 @@
 import os
 import torch
+import datetime
 from peft import LoraConfig
 import torch.distributed as dist
 from dotenv import load_dotenv
@@ -42,8 +43,8 @@ def setup_distributed():
 def prepare_data():
     ds = load_dataset("UWV/Leesplank_NL_wikipedia_simplifications_preprocessed")
     dataset_dict = {
-        "train": ds["train"],
-        "val": ds["val"]
+            "train": ds["train"],
+            "val": ds["val"].shuffle(seed=42).select(range(2048))
     }
     return DatasetDict(dataset_dict)
 
@@ -53,6 +54,9 @@ def main():
     
     # Check if GPU assignment is correct
     print(f"Process {dist.get_rank()} is using GPU {torch.cuda.current_device()}")
+
+    # Load the data
+    ds = prepare_data()
 
     # Get tokenizer
     model_id = "ibm-granite/granite-3.1-2b-instruct"
@@ -64,9 +68,6 @@ def main():
 
     if processing_class.model_max_length > 100_000:
         processing_class.model_max_length = 2048
-        
-    # Load the data
-    ds = prepare_data(processing_class)
 
     def formatting_prompts_func(example):
         output_texts = []
@@ -87,8 +88,7 @@ def main():
 
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        # attn_implementation="flash_attention_2",
-        attn_implementation="eager",
+        attn_implementation="flash_attention_2",
         torch_dtype="auto",
         use_cache=False,
         device_map={"": torch.cuda.current_device()},
@@ -104,10 +104,10 @@ def main():
         target_modules=["q_proj", "v_proj"]
     )
 
-    output_dir = "qlora_output/ibm3-1-2b-base-sft-lora"
+    output_dir = "qlora_output/train_with_flash"
     training_args = SFTConfig(
         output_dir=output_dir,
-        learning_rate=5e-6,
+        learning_rate=5e-5,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
         num_train_epochs=1,
@@ -115,15 +115,21 @@ def main():
         do_eval=True,
         logging_strategy="steps",
         lr_scheduler_type="cosine",
-        logging_steps=50,
-        bf16=True,  # try this instead of fp16
+        logging_steps=100,
+        bf16=True,
         optim="adafactor",
         gradient_checkpointing=True,
-        max_grad_norm=5,  # Prevent grad norm from getting too large
+        gradient_checkpointing_kwargs={"use_reentrant": False},  # Is recommended to use False by the torch docs
+        max_grad_norm=5,
         report_to="none",
         gradient_accumulation_steps=2,
         ddp_find_unused_parameters=False,
-        ddp_backend='nccl'
+        ddp_backend='nccl',
+        max_seq_length=processing_class.model_max_length,
+        save_strategy="steps",
+        save_steps=1000,
+        save_total_limit=5,
+        save_safetensors=True,
     )
 
     trainer = SFTTrainer(
