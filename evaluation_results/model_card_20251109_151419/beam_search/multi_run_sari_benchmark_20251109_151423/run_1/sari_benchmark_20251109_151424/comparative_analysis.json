@@ -1,0 +1,46 @@
+{
+  "timestamp": "20251109_151424",
+  "configuration": {
+    "num_samples": 1000,
+    "seed": 42,
+    "note": "use_system_prompt is configured per-model"
+  },
+  "results": {
+    "eurollm-leesplank": {
+      "model_name": "eurollm-leesplank",
+      "model_path": "UWV/leesplank-noot-eurollm-1.7b",
+      "model_type": "eurollm",
+      "num_samples": 1000,
+      "sari_mean": 66.80650988710995,
+      "sari_std": 12.559191198563356,
+      "sari_median": 66.07779762122601,
+      "sari_min": 35.10640341296641,
+      "sari_max": 100.0,
+      "sari_q25": 57.970509719725044,
+      "sari_q75": 73.70756386820217,
+      "avg_generation_time": 3.404518182039261,
+      "total_time": 3404.518182039261,
+      "tokens_per_second": 19.03793621721141
+    },
+    "granite-leesplank": {
+      "model_name": "granite-leesplank",
+      "model_path": "UWV/leesplank-noot-granite-3.3-2b",
+      "model_type": "granite",
+      "num_samples": 1000,
+      "sari_mean": 65.22481106394248,
+      "sari_std": 11.885188422989737,
+      "sari_median": 64.82525803883735,
+      "sari_min": 30.36740539237382,
+      "sari_max": 100.0,
+      "sari_q25": 56.73720174294011,
+      "sari_q75": 71.59584438770923,
+      "avg_generation_time": 10.121546781539918,
+      "total_time": 10121.546781539917,
+      "tokens_per_second": 7.743875683403704
+    }
+  },
+  "ranking": [
+    "eurollm-leesplank",
+    "granite-leesplank"
+  ]
+}

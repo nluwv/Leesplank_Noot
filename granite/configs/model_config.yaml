@@ -1,0 +1,36 @@
+# Model and LoRA Configuration
+
+# Quantization settings (QLoRA)
+load_in_4bit: false
+bnb_4bit_compute_dtype: "bfloat16"
+bnb_4bit_quant_type: "nf4"
+bnb_4bit_use_double_quant: true
+
+# LoRA configuration
+use_lora: false
+lora_r: 64  # LoRA rank
+lora_alpha: 16  # LoRA alpha (scaling factor)
+lora_dropout: 0.05
+lora_bias: "none"
+
+# Target modules for LoRA (Granite architecture)
+# Granite uses similar architecture to LLaMA, targeting all linear layers
+lora_target_modules:
+  - "q_proj"
+  - "k_proj"
+  - "v_proj"
+  - "o_proj"
+  - "gate_proj"
+  - "up_proj"
+  - "down_proj"
+
+# Model loading settings
+trust_remote_code: false
+use_cache: false  # Must be false for gradient checkpointing
+attn_implementation: "flash_attention_2"  # Use Flash Attention 2 for efficiency
+torch_dtype: "bfloat16"
+
+# Tokenizer settings
+use_fast_tokenizer: true
+padding_side: "right"
+add_eos_token: true

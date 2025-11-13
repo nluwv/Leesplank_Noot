@@ -1,0 +1,20 @@
+# Use CPU-only PyTorch index
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Install PyTorch packages first
+torch
+# torchvision
+# torchaudio
+
+# Install the rest from PyPI
+transformers
+sentencepiece
+datasets
+accelerate==1.0.1  # to prevent AttributeError: 'AdamW' object has no attribute 'optim_bits' with paged_adamw-8bit
+# bitsandbytes  # Removed as it's CUDA-specific
+
+sacremoses 
+sacrebleu
+
+# Include common requirements
+-r requirements-common.txt

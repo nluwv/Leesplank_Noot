@@ -1,0 +1,98 @@
+{
+  "llama-leesplank": {
+    "runs": [
+      {
+        "run_id": 1,
+        "seed": 42,
+        "sari_mean": 67.7612238083885,
+        "sari_std": 12.56718227654236
+      },
+      {
+        "run_id": 2,
+        "seed": 43,
+        "sari_mean": 66.92122072216632,
+        "sari_std": 12.592454686983762
+      },
+      {
+        "run_id": 3,
+        "seed": 44,
+        "sari_mean": 67.819674623019,
+        "sari_std": 12.652212616800497
+      }
+    ],
+    "aggregated": {
+      "mean_of_means": 67.5007063845246,
+      "std_of_means": 0.5026995614597783,
+      "mean_of_stds": 12.603949860108875,
+      "confidence_interval_95": [
+        66.25193144623749,
+        68.74948132281172
+      ],
+      "num_runs": 3
+    }
+  },
+  "eurollm-leesplank": {
+    "runs": [
+      {
+        "run_id": 1,
+        "seed": 42,
+        "sari_mean": 66.80650988710995,
+        "sari_std": 12.559191198563356
+      },
+      {
+        "run_id": 2,
+        "seed": 43,
+        "sari_mean": 66.22496957179766,
+        "sari_std": 12.91210673811758
+      },
+      {
+        "run_id": 3,
+        "seed": 44,
+        "sari_mean": 66.302560980904,
+        "sari_std": 12.751942707986831
+      }
+    ],
+    "aggregated": {
+      "mean_of_means": 66.44468014660386,
+      "std_of_means": 0.3157462232993466,
+      "mean_of_stds": 12.741080214889257,
+      "confidence_interval_95": [
+        65.66032304597293,
+        67.22903724723479
+      ],
+      "num_runs": 3
+    }
+  },
+  "granite-leesplank": {
+    "runs": [
+      {
+        "run_id": 1,
+        "seed": 42,
+        "sari_mean": 65.22481106394248,
+        "sari_std": 11.885188422989737
+      },
+      {
+        "run_id": 2,
+        "seed": 43,
+        "sari_mean": 65.53470222044251,
+        "sari_std": 12.287578110762407
+      },
+      {
+        "run_id": 3,
+        "seed": 44,
+        "sari_mean": 65.7582911092358,
+        "sari_std": 11.862222392471933
+      }
+    ],
+    "aggregated": {
+      "mean_of_means": 65.50593479787359,
+      "std_of_means": 0.2679009390287455,
+      "mean_of_stds": 12.011662975408028,
+      "confidence_interval_95": [
+        64.84043197222721,
+        66.17143762351998
+      ],
+      "num_runs": 3
+    }
+  }
+}

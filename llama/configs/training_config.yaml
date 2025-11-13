@@ -1,0 +1,52 @@
+# Training Configuration for Granite Dutch Simplification
+
+# Model settings
+model_name: "meta-llama/Llama-3.2-3B-Instruct"
+output_dir: "data/outputs/leesplank-noot-llama-3.2-3b"
+
+# Dataset settings
+dataset_name: "UWV/Leesplank_NL_wikipedia_simplifications_preprocessed"
+max_seq_length: 1024  # Keeps 99.4% of data (99th percentile: 958 tokens, max: 2319 tokens)
+dataset_text_field: "formatted_text"  # Will be created during preprocessing
+
+# Training hyperparameters
+num_train_epochs: 2
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 8  # Effective batch size = 64
+learning_rate: 5.0e-5
+weight_decay: 0.01
+warmup_steps: 200
+lr_scheduler_type: "cosine"
+
+# Optimization settings
+optim: "paged_adamw_8bit"
+# optim: "adamw_torch"
+gradient_checkpointing: true
+max_grad_norm: 1.0
+bf16: true  # Use bfloat16 for better numerical stability
+tf32: true
+
+# Logging and evaluation
+logging_steps: 100
+eval_strategy: "steps"
+eval_steps: 1000
+save_strategy: "steps"
+save_steps: 1000
+save_total_limit: 3
+load_best_model_at_end: true
+metric_for_best_model: "eval_loss"
+
+# Generation settings for evaluation
+max_new_tokens: 512  # Covers 99% of outputs (99th percentile: 422 tokens, max: 769 tokens)
+do_sample: false
+temperature: 0.7
+
+# System prompt for Dutch text simplification
+system_prompt: "Je bent een AI-assistent die Nederlandse teksten vereenvoudigt naar een helder, toegankelijk niveau voor iedereen, vergelijkbaar met de heldere taal die het Jeugdjournaal gebruikt. Behoud de betekenis en belangrijke informatie, maar gebruik eenvoudigere woorden en kortere zinnen. Schrijf niet kinderlijk, maar wel toegankelijk."
+
+# Advanced settings
+packing: false  # Keep conversations intact
+remove_unused_columns: false
+report_to: ["tensorboard", "wandb"]  # Change to ["tensorboard"] if not using wandb
+seed: 42

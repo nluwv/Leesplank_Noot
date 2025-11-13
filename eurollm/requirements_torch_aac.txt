@@ -1,0 +1,15 @@
+# Assuming PyTorch (ROCm) is pre-installed on the cluster
+
+# Core ML dependencies
+transformers==4.47.0
+accelerate==1.2.0
+optimum-amd==0.1.0
+sentencepiece==0.2.0
+datasets
+huggingface-hub>=0.24.0
+safetensors>=0.4.1
+peft
+trl
+
+# Common requirements
+-r requirements_common.txt

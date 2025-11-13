@@ -1,0 +1,67 @@
+llama-leesplank:
+  model_name: llama-leesplank
+  model_path: UWV/leesplank-noot-llama-3.2-3b
+  model_type: llama
+  num_samples: 100
+  sari_mean: 66.88333770460413
+  sari_std: 11.867164084185777
+  sari_median: 67.7655824096208
+  sari_min: 41.128871995487096
+  sari_max: 100.0
+  sari_q25: 59.670764508050425
+  sari_q75: 74.01371655736591
+  avg_generation_time: 3.982265043258667
+  total_time: 398.2265043258667
+  tokens_per_second: !!python/object/apply:numpy._core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - f8
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    n5GD23vTL0A=
+eurollm-leesplank:
+  model_name: eurollm-leesplank
+  model_path: UWV/leesplank-noot-eurollm-1.7b
+  model_type: eurollm
+  num_samples: 100
+  sari_mean: 66.68598774406433
+  sari_std: 11.482757899487087
+  sari_median: 66.92481356237252
+  sari_min: 42.640679773363004
+  sari_max: 100.0
+  sari_q25: 57.68083074550772
+  sari_q75: 73.70779981458614
+  avg_generation_time: 2.3147910022735596
+  total_time: 231.47910022735596
+  tokens_per_second: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    UOiP0kB/O0A=
+granite-leesplank:
+  model_name: granite-leesplank
+  model_path: UWV/leesplank-noot-granite-3.3-2b
+  model_type: granite
+  num_samples: 100
+  sari_mean: 64.87491950718623
+  sari_std: 12.05816072014746
+  sari_median: 66.66159902221767
+  sari_min: 36.11717666864726
+  sari_max: 100.0
+  sari_q25: 57.16725716372859
+  sari_q75: 72.26115313139493
+  avg_generation_time: 7.115993568897247
+  total_time: 711.5993568897247
+  tokens_per_second: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    iYUu8dklJ0A=
