@@ -1,6 +1,6 @@
 # Leesplank_Noot
 
-This repository was created to develop the LLM Noot
+This repository was created to develop the LLM Noot.
 
 # Preprocessing
 It contains scripts for preprocessing the training data. There are 2 trainging datasets:
