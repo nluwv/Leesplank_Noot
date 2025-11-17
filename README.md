@@ -9,7 +9,7 @@ tags:
 - public-service
 - ai-act
 - responsible-ai
-license: eupl-1.2
+license: apache-2.0
 pipeline_tag: text2text-generation
 ---
 
@@ -36,7 +36,7 @@ Om de Leesplank: Noot modellen AI Act-compliant te gebruiken, volg je deze stapp
 1. **Technische documentatie raadplegen**: Gebruik de gedetailleerde documentatie om de capaciteiten en beperkingen van het model te begrijpen. Wij willen samenwerken om deze documentatie compleet te krijgen.
 1. **Bias en risico monitoren**: Voer regelmatig tests uit met representatieve data om bias en risico's te minimaliseren.
 1. **Logboek bijhouden**: Registreer input en output van het model veilig en versleuteld.
-1. **Licentie naleven**: Zorg dat je wijzigingen of verdere distributie van het model onder de EUPL-1.2 licentie houdt.
+1. **Licentie naleven**: Zorg dat je wijzigingen of verdere distributie van de code onder de Apache 2.0 licentie houdt.
 1. **registreren (aanbevolen)**: registreer het gebruik van deze modellen in een productieomgeving in het algoritmeregister, omwille van transparantie en vertrouwen.
 1. **FRIA (fundamentele rechten impact assessment, aanbevolen): voer een lichte versie van deze assessment uit, vooral bij gebruik in de publieke sector.
 1. **beoogd gebruik: Limited Risk**: wanneer de toepassing van dit model maakt dat de risicoklasse hoger uitkomt, gelden er strengere regels. Raadpleeg artikel 6 en annex III van de AI act.
@@ -53,15 +53,12 @@ Om de Leesplank: Noot modellen AI Act-compliant te gebruiken, volg je deze stapp
 
 ---
 
-## 📦 Modellen
-Deze release bevat drie afzonderlijke modellen, identiek qua trainingsdata maar met verschillende basismodellen:
-
-1. **Leesplank: Noot – A**  
-   Basismodel: *Granite-3.3-2b-instruct* – [HuggingFace](https://huggingface.co/ibm-granite/granite-3.3-2b-instruct)
-2. **Leesplank: Noot – B**  
-   Basismodel: *Llama-3.2-3b-instruct* – [HuggingFace](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct)
-3. **Leesplank: Noot – C**  
-   Basismodel: *[Naam]* – [onderscheidende kenmerken?]
+## 📦 Gepubliceerde Modellen
+| Model | HuggingFace Link | SARI Score | Snelheid (beam/greedy) | #Params |
+|-------|------------------|------------|----------------------------------|------------|
+| **[Granite-3.3-2b](https://huggingface.co/UWV/leesplank-noot-granite-3.3-2b)** | UWV/leesplank-noot-granite-3.3-2b | **67.80** ±0.22 | 8.30 / 9.53 | 2B |
+| **[Llama-3.2-3b](https://huggingface.co/UWV/leesplank-noot-llama-3.2-3b)** | UWV/leesplank-noot-llama-3.2-3b | 67.50 ±0.50 | 13.96 / 15.91 | 3B |
+| **[EuroLLM-1.7b](https://huggingface.co/UWV/leesplank-noot-eurollm-1.7b)** | UWV/leesplank-noot-eurollm-1.7b | 66.44 ±0.32 | 24.08 / **27.50** | 1.7B |
 
 ## 🛠 Training Data
 `UWV/Leesplank_NL_wikipedia_simplifications_preprocessed` is een dataset bestaande uit vereenvoudigingen van Wikipedia teksten. Unieke aanpak: in plaats van op woord- of zinsniveau te vereenvoudigen, vereenvoudigen wij op paragraaf niveau. Dit leidt tot samenhangender en leesbaarder teksten, waarin out of vocabulary termen op natuurlijke wijze in tekst worden uitgelegd. Deze trainingsdata is legaal verkregen en er is geen inbreuk gedaan op auteursrechten. Een uitspraak over de onderliggende modellen doen wij niet.
@@ -74,22 +71,16 @@ Deze release bevat drie afzonderlijke modellen, identiek qua trainingsdata maar 
 
 ## 🔍 Evaluatie
 
-### SARI Scores (hogere score = betere vereenvoudiging)
+*SARI Benchmark: Beam Search (num_beams=5), 1000 samples, 3 runs met 95% betrouwbaarheidsinterval*
+*Snelheid: Beam Search / Greedy decoding (tokens per seconde) gemeten op RTX3090*
 
-**Base Modellen:**
-- **Granite-3.3-2b-instruct (base):** `44.16`
-- **Llama-3.2-3b-instruct (base):** `##.#`
-- **[Model C base]:** `##.#`
+### Model Selectie
+- **Hoogste kwaliteit** → Granite-3.3-2b (SARI 67.80)
+- **Snelste inferentie** → EuroLLM-1.7b (27.50 tokens/sec met greedy)
+- **Beperkt GPU geheugen** → EuroLLM-1.7b (1.7B parameters)
+- **Gebalanceerd** → Granite-3.3-2b (beste kwaliteit) of Llama-3.2-3b (goede snelheid)
 
-**Finetuned Modellen:**
-- **Leesplank: Noot – A (finetuned):** `68.89`
-- **Leesplank: Noot – B (finetuned):** `##.#`
-- **Leesplank: Noot – C (finetuned):** `##.#`
-
-**Gemiddelde score over alle finetuned modellen:** `##.#`
-
-> **Waarom geen BLEU?** BLEU meet woord-overlap en is niet geschikt voor de kwaliteit van vereenvoudiging.  
-> SARI meet behouden, toevoegen en verwijderen van relevante woorden en is de standaard voor tekstvereenvoudiging.
+> **Waarom SARI?** SARI meet behouden, toevoegen en verwijderen van relevante woorden en is de standaard voor tekstvereenvoudiging. BLEU meet alleen woord-overlap en is niet geschikt voor de kwaliteit van vereenvoudiging.
 
 ---
 
@@ -113,7 +104,8 @@ Deze release bevat drie afzonderlijke modellen, identiek qua trainingsdata maar 
 ---
 
 ## 📄 Licentie
-- **Licentie:** [EUPL-1.2] – open, herbruikbaar, en compatibel met AIA-vereisten.
+- **Broncode:** Apache License 2.0 (zie LICENSE.txt) – open, herbruikbaar, en compatibel met AIA-vereisten.
+- **Dataset op HuggingFace:** Creative Commons Attribution-ShareAlike (CC-BY-SA)
 - Vrij gebruik, wijziging en distributie met bronvermelding.
-
-- Aangepaste versies moeten onder dezelfde licentie blijven.
+- Aangepaste versies van de code moeten onder dezelfde Apache 2.0 licentie blijven.
+- Afgeleide werken van de dataset moeten onder CC-BY-SA blijven.
